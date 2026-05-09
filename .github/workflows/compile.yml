@@ -6,8 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # 解決你截圖中的警告問題
     steps:
       - uses: actions/checkout@v4
       
@@ -19,12 +17,13 @@ jobs:
           cache: maven
           
       - name: Build with Maven
-        # 這裡加上了 --fail-never 確保即使有一兩個小依賴抓不到，也會嘗試繼續編譯
-        run: mvn clean package -DskipTests --fail-never 
+        # 移除 --fail-never，這樣如果有錯才會噴出來，我們才好修
+        run: |
+          mvn versions:use-latest-releases -Dincludes=com.google.guava:guava
+          mvn clean package -DskipTests
         
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:
           name: My-Nukkit-Jar
-          path: target/*.jar
-          if-no-files-found: warn # 沒找到檔案時只警告，不報錯
+          path: "**/*.jar" # 擴大搜索範圍，確保能抓到檔案
